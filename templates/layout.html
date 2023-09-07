@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flaskr</title>
-    <link rel="stylesheet" href="static/estilo.css">
+    <link rel="stylesheet" href="{{ url_for('static')}}">
 </head>
 
 <body>
@@ -13,9 +13,9 @@
         <h1>Flaskr</h1>
         <div class="metanav">
             {% if not session.logado %}
-                <a href="">login</a>
+                <a href="{{ url_for('login') }}">login</a>
             {% else %}
-                <a href="">logout</a>
+                <a href="{{ url_for('logout') }}">logout</a>
             {% endif %}
         </div>
         {% for mensagem in get_flashed_messages() %}
