@@ -1,26 +1,46 @@
-from flask import Flask, render_template, request, session, flash, redirect, url_for
+from flask import Flask, render_template, g,  request, session, abort, flash, redirect, url_for
+from posts import posts
+import sqlite3
 
-
-app = Flask('meu app')
+app = Flask(__name__)
 app.config['SECRET_KEY'] = 'pudim'
 
-post = [
-    {
-        "titulo": "Minha primeira postagem",
-        "texto": "teste"
-    },
-    {
-        "titulo": "Segundo post",
-        "texto": "Outro teste"
-    }
-]
+app.config.from_object(__name__)
+
+DATABASE = "banco.bd"
+
+def conectar():
+    return sqlite3.connect(DATABASE)
+
+@app.before_request
+def before_request():
+    g.bd = conectar()    
+
+@app.teardown_request
+def teardown_request(f):
+    g.bd.close()        
+
+
 
 @app.route('/')
 def exibir_entradas():
-    entradas = post[::-1] #Moc das postagens
-    return render_template('exibir_entradas.html', entradas=entradas)
+    # entradas = posts[::-1] # Mock das postagens
 
-@app.route('/login', methods=['GET', 'POST'])
+
+    sql  = "SELECT titulo, texto, data_criacao FROM posts ORDER BY id DESC"
+    resultado = g.bd.execute(sql)
+    entrada = []
+
+    for titulo, texto, data_criacao in resultado.fetchall():
+        entrada.append({
+        "titulo":titulo,
+        "texto":texto,
+        "data_criacao":data_criacao
+        })
+
+    return render_template('exibir_entradas.html', entradas=entrada)
+
+@app.route('/login', methods=["GET", "POST"])
 def login():
     erro = None
     if request.method == "POST":
@@ -34,21 +54,26 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('logado')
-    flash('logout efetuado com sucesso!')
+    flash('Logout efetuado com sucesso!')
     return redirect(url_for('exibir_entradas'))
 
-@app.route('/inserir', methods=['POST'])
-def inserir_entrada():
-    if session['logado']:
-        novo_post ={ 
-            'titulo': request.form['titulo'],
-            'texto': request.form['texto']
-        }
-        post.append(novo_post)
-        flash("Post criado com sucesso!")
+@app.route('/inserir', methods=["POST"])
+def inserir_entradas():
+    if not session['logado']:
+        abort(401)
+        
+    titulo = request.form.get('titulo')  
+    texto = request.form.get('texto')  
+    sql = "INSERT INTO posts (titulo, texto) values(?,?) "
+    g.bd.execute(sql,[titulo, texto])
+    g.bd.commit()
+    flash("Post criado com sucesso!")
     return redirect(url_for('exibir_entradas'))
 
-@app.route('/posts')
-# @app.route('/novo')
-# def novo():
-#     return '<h1> Nova página </h1>'
+# @app.route('/posts/<int:id>')
+# def exibir_entrada(id):
+#     try:
+#         entrada = posts[id-1]
+#         return render_template('exibir_entrada.html', entrada=entrada)
+#     except Exception:
+#         return abort(404)

@@ -1,28 +1,27 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!doctype html5>
+<html>
+    <head>
+        <title>Flaskr</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+    </head>
+    <body>
+        <div class="pagina">
+            <h1>Flaskr</h1>
+  
+            <div class="metanav">
+                {% if not session.logado %}
+                    <a href="{{ url_for('login') }}">login</a>
+                {% else %}
+                    <a href="{{ url_for('logout' )}}">logout</a>
+                {% endif %}
+            </div>
+                
+            {% for mensagem in get_flashed_messages() %}
+                <div class="flash">{{ mensagem }}</div>
+            {% endfor %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flaskr</title>
-    <link rel="stylesheet" href="{{ url_for('static')}}">
-</head>
-
-<body>
-    <div class="pagina">
-        <h1>Flaskr</h1>
-        <div class="metanav">
-            {% if not session.logado %}
-                <a href="{{ url_for('login') }}">login</a>
-            {% else %}
-                <a href="{{ url_for('logout') }}">logout</a>
-            {% endif %}
+            {% block corpo %}
+            {% endblock %}
         </div>
-        {% for mensagem in get_flashed_messages() %}
-            <div class="flash">{{ mensagem }}</div>
-        {% endfor %}
-        {% block corpo %}
-        {% endblock %}
-    </div>
-</body>
+    </body>
 </html>
